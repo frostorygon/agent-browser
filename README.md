@@ -1,6 +1,6 @@
 # veb
 
-Headless browser automation CLI for agents and humans. Full Playwright parity.
+Headless browser automation CLI for agents and humans.
 
 ## Installation
 
@@ -10,447 +10,253 @@ npx playwright install chromium
 pnpm build
 ```
 
-## Usage
+## Quick Start
 
 ```bash
-# Navigation
-veb open https://example.com
-veb back                         # Go back
-veb forward                      # Go forward  
-veb reload                       # Reload page
-
-# Page info
-veb url                          # Get current URL
-veb title                        # Get page title
-
-# Clicking
-veb click "#submit-btn"
-veb dblclick "#item"
-veb tap "#mobile-btn"            # Touch tap
-
-# Form input
-veb type "#search" "query"           # Type character by character
-veb fill "#email" "test@example.com" # Clear and fill (faster)
-veb check "#agree"                   # Check checkbox/radio
-veb uncheck "#newsletter"            # Uncheck checkbox
-veb select "#country" "US"           # Select dropdown
-veb clear-input "#field"             # Clear input field
-veb setvalue "#hidden" "val"         # Set value directly
-
-# Keyboard
-veb press Enter
-veb press Tab
-veb press "Control+a"                # Keyboard shortcuts
-veb press "Shift+Tab"
-
-# Mouse
-veb hover "#menu"
-veb focus "#input"
-veb drag "#source" "#target"
-veb wheel 300                        # Scroll wheel (deltaY)
-veb wheel 0 100                      # Scroll wheel (deltaX, deltaY)
-veb mousemove 100 200                # Move mouse to coordinates
-veb mousedown                        # Press mouse button
-veb mouseup                          # Release mouse button
-veb mousedown right                  # Right-click down
-
-# Text operations
-veb selectall "#input"               # Select all text
-veb clipboard copy                   # Copy to clipboard
-veb clipboard paste                  # Paste from clipboard
-veb clipboard read                   # Read clipboard content
-
-# File upload
-veb upload "#file-input" ./document.pdf
-veb upload "#files" ./a.png ./b.png
-
-# Downloads
-veb download "#download-btn" ./file.zip
-
-# Waiting
-veb wait "#loading"              # Wait for selector
-veb wait --text "Welcome"        # Wait for text
-veb wait 2000                    # Wait 2 seconds
-veb waitforurl "**/dashboard"    # Wait for URL pattern
-veb waitforload networkidle      # Wait for network idle
-veb waitforload domcontentloaded # Wait for DOM ready
-
-# Screenshots & PDF
+veb open example.com
+veb click "#submit"
+veb fill "#email" "test@example.com"
+veb get text "h1"
 veb screenshot page.png
-veb screenshot --full page.png   # Full page
-veb screenshot -s "#hero"        # Specific element
-veb pdf report.pdf
-
-# Content extraction
-veb snapshot                     # Accessibility tree (best for agents)
-veb extract "#main"              # Get HTML
-veb eval "document.title"        # Run JavaScript
-veb innertext "#message"         # Get inner text
-veb innerhtml "#container"       # Get inner HTML
-veb inputvalue "#field"          # Get input value
-
-# Element info
-veb gettext "#message"           # Get text content
-veb getattr "#link" "href"       # Get attribute
-veb isvisible "#modal"           # Check visibility
-veb isenabled "#submit"          # Check if enabled
-veb ischecked "#checkbox"        # Check if checked
-veb count ".items"               # Count matching elements
-veb boundingbox "#element"       # Get position/size
-veb highlight "#element"         # Highlight element (debugging)
-
-# Scrolling
-veb scroll down 500
-veb scroll up
-veb scroll -s "#container" down
-
-# Semantic locators (Playwright's recommended approach)
-veb role button click --name "Submit"
-veb role textbox fill "hello" --name "Email"
-veb text "Sign In" click
-veb text "Submit" click --exact
-veb label "Email" fill "test@test.com"
-veb placeholder "Search..." fill "query"
-veb alt "Logo" click              # By alt text
-veb bytitle "Close" click         # By title attribute
-veb testid "submit-btn" click     # By data-testid
-
-# Nth element (when multiple match)
-veb first "a" click               # Click first link
-veb last "a" click                # Click last link
-veb nth "a" 2 click               # Click 3rd link (0-indexed)
-veb first ".item" text            # Get text of first item
-
-# Frames/iframes
-veb frame "#iframe"              # Switch to iframe
-veb mainframe                    # Switch back to main
-
-# Network interception
-veb route "**/*.png" --abort                    # Block images
-veb route "**/api/*" --body '{"mock":true}'     # Mock API
-veb unroute                                      # Remove all routes
-veb requests                                     # View tracked requests
-veb requests --filter "api"                      # Filter requests
-
-# Browser settings
-veb viewport 1920 1080           # Set viewport size
-veb device "iPhone 14"           # Emulate device
-veb geolocation 37.7749 -122.4194  # Set location (SF)
-veb permissions grant geolocation notifications
-veb media --dark                 # Dark mode
-veb media --light                # Light mode
-veb media --print                # Print media type
-veb media --reduced-motion       # Reduced motion
-veb offline                      # Enable offline mode
-veb offline off                  # Disable offline mode
-veb headers '{"X-Custom":"value"}'  # Set extra headers
-veb credentials user pass        # HTTP basic auth
-veb timezone America/New_York    # Set timezone (at launch)
-veb locale fr-FR                 # Set locale (at launch)
-
-# Cookies
-veb cookies                      # Get all cookies
-veb cookies set '[{"name":"session","value":"abc123","domain":".example.com"}]'
-veb cookies clear
-
-# Storage
-veb storage local                # Get all localStorage
-veb storage local myKey          # Get specific key
-veb storage local set key value  # Set value
-veb storage local clear          # Clear localStorage
-veb storage session              # sessionStorage (same commands)
-
-# Dialogs (alerts, confirms, prompts)
-veb dialog accept                # Accept next dialog
-veb dialog accept "input text"   # Accept prompt with text
-veb dialog dismiss               # Dismiss next dialog
-
-# Debugging & Tracing
-veb trace start                  # Start recording trace
-veb trace start --screenshots    # With screenshots
-veb trace stop ./trace.zip       # Stop and save trace
-veb state save ./auth.json       # Save cookies/storage
-veb state load ./auth.json       # Load saved state
-veb console                      # View console messages
-veb console --clear              # Clear console
-veb errors                       # View page errors
-veb errors --clear               # Clear errors
-veb pause                        # Pause (opens inspector)
-
-# Inject scripts/styles
-veb addscript "console.log('hi')"
-veb addscript https://example.com/lib.js
-veb addstyle "body { background: red; }"
-veb addstyle https://example.com/styles.css
-veb setcontent '<h1>Hello</h1>'  # Set page HTML directly
-
-# Custom events
-veb dispatch "#btn" "click"
-veb dispatch "#input" "focus"
-
-# Tabs
-veb tab new
-veb tab list
-veb tab 0                        # Switch to tab
-veb tab close
-
-# Windows
-veb window new
-
-# Sessions (isolate multiple agents)
-veb --session agent1 open example.com
-veb --session agent2 open google.com
-VEB_SESSION=agent1 veb click "#btn"
-veb session list
-
-# Close browser
 veb close
 ```
 
-## Agent Mode
+## Commands
 
-Use `--json` flag for machine-readable output:
+### Core Commands
 
 ```bash
-veb snapshot --json
-veb eval "document.title" --json
-veb isvisible "#modal" --json
+veb open <url>              # Navigate to URL
+veb click <sel>             # Click element
+veb type <sel> <text>       # Type into element
+veb fill <sel> <text>       # Clear and fill
+veb press <key>             # Press key (Enter, Tab, Control+a)
+veb hover <sel>             # Hover element
+veb select <sel> <val>      # Select dropdown option
+veb check <sel>             # Check checkbox
+veb uncheck <sel>           # Uncheck checkbox
+veb scroll <dir> [px]       # Scroll (up/down/left/right)
+veb drag <src> <tgt>        # Drag and drop
+veb upload <sel> <files>    # Upload files
+veb screenshot [path]       # Take screenshot (--full for full page)
+veb pdf <path>              # Save as PDF
+veb snapshot                # Accessibility tree (best for AI)
+veb eval <js>               # Run JavaScript
+veb close                   # Close browser
 ```
 
-## All Commands
+### Get Info
 
-### Navigation
-| Command | Description |
-|---------|-------------|
-| `open <url>` | Navigate to URL |
-| `back` | Go back |
-| `forward` | Go forward |
-| `reload` | Reload page |
-| `url` | Get current URL |
-| `title` | Get page title |
+```bash
+veb get text <sel>          # Get text content
+veb get html <sel>          # Get innerHTML
+veb get value <sel>         # Get input value
+veb get attr <sel> <attr>   # Get attribute
+veb get title               # Get page title
+veb get url                 # Get current URL
+veb get count <sel>         # Count matching elements
+veb get box <sel>           # Get bounding box
+```
 
-### Interaction
-| Command | Description |
-|---------|-------------|
-| `click <selector>` | Click element |
-| `dblclick <selector>` | Double-click |
-| `tap <selector>` | Touch tap |
-| `type <selector> <text>` | Type text |
-| `fill <selector> <value>` | Clear & fill |
-| `press <key>` | Press key |
-| `check <selector>` | Check checkbox |
-| `uncheck <selector>` | Uncheck |
-| `select <selector> <value>` | Select option |
-| `hover <selector>` | Hover |
-| `focus <selector>` | Focus |
-| `drag <src> <target>` | Drag & drop |
-| `wheel [deltaY] [deltaX]` | Mouse wheel |
-| `clear-input <selector>` | Clear input |
-| `setvalue <selector> <val>` | Set value |
-| `selectall <selector>` | Select all text |
-| `upload <selector> <files>` | Upload files |
-| `download <selector> <path>` | Download file |
-| `scroll <dir> [amount]` | Scroll |
-| `clipboard copy\|paste\|read` | Clipboard ops |
+### Check State
 
-### Element Info
-| Command | Description |
-|---------|-------------|
-| `gettext <selector>` | Get text content |
-| `innertext <selector>` | Get inner text |
-| `innerhtml <selector>` | Get inner HTML |
-| `inputvalue <selector>` | Get input value |
-| `getattr <selector> <attr>` | Get attribute |
-| `isvisible <selector>` | Check visibility |
-| `isenabled <selector>` | Check enabled |
-| `ischecked <selector>` | Check checked |
-| `count <selector>` | Count elements |
-| `boundingbox <selector>` | Get bounds |
-| `highlight <selector>` | Highlight element |
+```bash
+veb is visible <sel>        # Check if visible
+veb is enabled <sel>        # Check if enabled
+veb is checked <sel>        # Check if checked
+```
 
-### Semantic Locators
-| Command | Description |
-|---------|-------------|
-| `role <role> <action>` | By ARIA role |
-| `text <text> <action>` | By text |
-| `label <label> <action>` | By label |
-| `placeholder <ph> <action>` | By placeholder |
-| `alt <text> <action>` | By alt text |
-| `bytitle <text> <action>` | By title attr |
-| `testid <id> <action>` | By data-testid |
-| `first <sel> <action>` | First match |
-| `last <sel> <action>` | Last match |
-| `nth <sel> <n> <action>` | Nth match |
+### Find Elements (Semantic Locators)
 
-### Content & Screenshots
-| Command | Description |
-|---------|-------------|
-| `screenshot [path]` | Screenshot |
-| `pdf <path>` | Save as PDF |
-| `snapshot` | Accessibility tree |
-| `extract <selector>` | Get HTML |
-| `setcontent <html>` | Set page HTML |
-| `eval <script>` | Run JavaScript |
-| `wait <sel\|text\|ms>` | Wait |
-| `waitforurl <pattern>` | Wait for URL |
-| `waitforload <state>` | Wait for load |
+```bash
+veb find role <role> <action> [value]       # By ARIA role
+veb find text <text> <action>               # By text content
+veb find label <label> <action> [value]     # By label
+veb find placeholder <ph> <action> [value]  # By placeholder
+veb find alt <text> <action>                # By alt text
+veb find title <text> <action>              # By title attr
+veb find testid <id> <action> [value]       # By data-testid
+veb find first <sel> <action> [value]       # First match
+veb find last <sel> <action> [value]        # Last match
+veb find nth <n> <sel> <action> [value]     # Nth match
+```
 
-### Network
-| Command | Description |
-|---------|-------------|
-| `route <url> [options]` | Intercept requests |
-| `unroute [url]` | Remove routes |
-| `requests [--filter]` | View requests |
+**Actions:** `click`, `fill`, `check`, `hover`, `text`
 
-### Browser Settings
-| Command | Description |
-|---------|-------------|
-| `viewport <w> <h>` | Set viewport |
-| `device <name>` | Emulate device |
-| `geolocation <lat> <lng>` | Set location |
-| `permissions grant\|deny` | Set permissions |
-| `media [options]` | Emulate media |
-| `offline [on\|off]` | Offline mode |
-| `headers <json>` | Extra HTTP headers |
-| `credentials <u> <p>` | HTTP basic auth |
-| `timezone <tz>` | Set timezone |
-| `locale <locale>` | Set locale |
+**Examples:**
+```bash
+veb find role button click --name "Submit"
+veb find text "Sign In" click
+veb find label "Email" fill "test@test.com"
+veb find first ".item" click
+veb find nth 2 "a" text
+```
+
+### Wait
+
+```bash
+veb wait <selector>         # Wait for element
+veb wait <ms>               # Wait for time
+veb wait --text "Welcome"   # Wait for text
+veb wait --url "**/dash"    # Wait for URL pattern
+veb wait --load networkidle # Wait for load state
+```
+
+**Load states:** `load`, `domcontentloaded`, `networkidle`
 
 ### Mouse Control
-| Command | Description |
-|---------|-------------|
-| `mousemove <x> <y>` | Move mouse |
-| `mousedown [button]` | Press button |
-| `mouseup [button]` | Release button |
 
-### Browser State
-| Command | Description |
-|---------|-------------|
-| `cookies` | Get cookies |
-| `cookies set <json>` | Set cookies |
-| `cookies clear` | Clear cookies |
-| `storage local [key]` | localStorage |
-| `storage session [key]` | sessionStorage |
-| `dialog accept\|dismiss` | Handle dialogs |
-| `state save <path>` | Save auth state |
-| `state load <path>` | Load auth state |
+```bash
+veb mouse move <x> <y>      # Move mouse
+veb mouse down [button]     # Press button (left/right/middle)
+veb mouse up [button]       # Release button
+veb mouse wheel <dy> [dx]   # Scroll wheel
+```
 
-### Debugging & Tracing
-| Command | Description |
-|---------|-------------|
-| `trace start` | Start trace recording |
-| `trace stop <path>` | Stop & save trace |
-| `console` | View console messages |
-| `console --clear` | Clear console |
-| `errors` | View page errors |
-| `errors --clear` | Clear errors |
-| `pause` | Open inspector |
-| `highlight <sel>` | Highlight element |
+### Browser Settings
 
-### Script Injection
-| Command | Description |
-|---------|-------------|
-| `addscript <url\|code>` | Add script |
-| `addstyle <url\|code>` | Add stylesheet |
-| `dispatch <sel> <event>` | Dispatch event |
+```bash
+veb set viewport <w> <h>    # Set viewport size
+veb set device <name>       # Emulate device ("iPhone 14")
+veb set geo <lat> <lng>     # Set geolocation
+veb set offline [on|off]    # Toggle offline mode
+veb set headers <json>      # Extra HTTP headers
+veb set credentials <u> <p> # HTTP basic auth
+veb set media [dark|light|print]  # Emulate media
+```
 
-### Frames & Tabs
-| Command | Description |
-|---------|-------------|
-| `frame <selector>` | Switch to frame |
-| `mainframe` | Back to main |
-| `tab new` | New tab |
-| `tab list` | List tabs |
-| `tab <index>` | Switch tab |
-| `tab close [index]` | Close tab |
-| `window new` | New window |
+### Cookies & Storage
 
-### Session & Control
-| Command | Description |
-|---------|-------------|
-| `session` | Show session |
-| `session list` | List sessions |
-| `close` | Close browser |
+```bash
+veb cookies                 # Get all cookies
+veb cookies set <json>      # Set cookies
+veb cookies clear           # Clear cookies
+
+veb storage local           # Get all localStorage
+veb storage local <key>     # Get specific key
+veb storage local set <k> <v>  # Set value
+veb storage local clear     # Clear all
+
+veb storage session         # Same for sessionStorage
+```
+
+### Network
+
+```bash
+veb network route <url>              # Intercept requests
+veb network route <url> --abort      # Block requests
+veb network route <url> --body <json>  # Mock response
+veb network unroute [url]            # Remove routes
+veb network requests                 # View tracked requests
+veb network requests --filter api    # Filter requests
+```
+
+### Tabs & Windows
+
+```bash
+veb tab                     # List tabs
+veb tab new                 # New tab
+veb tab <n>                 # Switch to tab n
+veb tab close [n]           # Close tab
+veb window new              # New window
+```
+
+### Frames
+
+```bash
+veb frame <sel>             # Switch to iframe
+veb frame main              # Back to main frame
+```
+
+### Dialogs
+
+```bash
+veb dialog accept [text]    # Accept (with optional prompt text)
+veb dialog dismiss          # Dismiss
+```
+
+### Debug
+
+```bash
+veb trace start             # Start recording trace
+veb trace stop <path>       # Stop and save trace
+veb console                 # View console messages
+veb console --clear         # Clear console
+veb errors                  # View page errors
+veb highlight <sel>         # Highlight element
+veb state save <path>       # Save auth state
+veb state load <path>       # Load auth state
+```
+
+### Navigation
+
+```bash
+veb back                    # Go back
+veb forward                 # Go forward
+veb reload                  # Reload page
+```
+
+### Sessions
+
+```bash
+veb session                 # Show current session
+veb session list            # List active sessions
+```
 
 ## Options
 
 | Option | Description |
 |--------|-------------|
-| `--session <name>` | Use isolated session |
-| `--json` | JSON output |
+| `--session <name>` | Use isolated session (or `VEB_SESSION` env) |
+| `--json` | JSON output (for agents) |
 | `--full, -f` | Full page screenshot |
-| `--selector, -s` | Target element |
 | `--name, -n` | Locator name filter |
 | `--exact` | Exact text match |
-| `--text, -t` | Wait for text |
-| `--abort` | Abort route |
-| `--body` | Route response body |
-| `--filter` | Filter requests |
-| `--clear` | Clear console/errors |
-| `--screenshots` | Include screenshots in trace |
-| `--dark` | Dark color scheme |
-| `--light` | Light color scheme |
-| `--print` | Print media type |
-| `--reduced-motion` | Reduced motion |
 | `--debug` | Debug output |
-
-## Device Emulation
-
-```bash
-# Mobile devices
-veb device "iPhone 14"
-veb device "iPhone 14 Pro Max"
-veb device "Pixel 7"
-veb device "Galaxy S23"
-
-# Tablets
-veb device "iPad Pro 11"
-veb device "Galaxy Tab S8"
-
-# Desktop
-veb viewport 1920 1080
-veb viewport 2560 1440
-```
 
 ## Sessions
 
-Sessions allow multiple agents to use veb simultaneously without interfering:
+Run multiple isolated browser instances:
 
 ```bash
-# Using --session flag
-veb --session agent1 open https://site-a.com
-veb --session agent2 open https://site-b.com
+# Different sessions
+veb --session agent1 open site-a.com
+veb --session agent2 open site-b.com
 
-# Using environment variable
-export VEB_SESSION=agent1
-veb open https://example.com
+# Or via environment
+VEB_SESSION=agent1 veb click "#btn"
 
-# List all running sessions
+# List all
 veb session list
-
-# Close a specific session
-veb --session agent1 close
 ```
 
 ## Selectors
-
-veb supports all Playwright selectors:
 
 ```bash
 # CSS
 veb click "#id"
 veb click ".class"
-veb click "div.container > button"
+veb click "div > button"
 
 # Text
-veb click "text=Click me"
+veb click "text=Submit"
 
 # XPath
-veb click "xpath=//button[@type='submit']"
+veb click "xpath=//button"
 
 # Semantic (recommended)
-veb role button click --name "Submit"
-veb label "Email" fill "test@test.com"
+veb find role button click --name "Submit"
+veb find label "Email" fill "test@test.com"
+```
+
+## Agent Mode
+
+Use `--json` for machine-readable output:
+
+```bash
+veb snapshot --json
+veb get text "h1" --json
+veb is visible ".modal" --json
 ```
 
 ## License
