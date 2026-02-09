@@ -276,11 +276,24 @@ pub fn ensure_daemon(
     let exe_path = env::current_exe().map_err(|e| e.to_string())?;
     // Canonicalize to resolve symlinks (e.g., npm global bin symlink -> actual binary)
     let exe_path = exe_path.canonicalize().unwrap_or(exe_path);
+
+    // On Windows, canonicalize() returns UNC paths (\\?\C:\...) which can cause
+    // issues with relative path joins. Strip the UNC prefix.
+    #[cfg(windows)]
+    let exe_path = {
+        let s = exe_path.to_string_lossy();
+        if let Some(stripped) = s.strip_prefix(r"\\?\") {
+            PathBuf::from(stripped)
+        } else {
+            exe_path
+        }
+    };
+
     let exe_dir = exe_path.parent().unwrap();
 
     let mut daemon_paths = vec![
         exe_dir.join("daemon.js"),
-        exe_dir.join("../dist/daemon.js"),
+        exe_dir.join("..").join("dist").join("daemon.js"),
         PathBuf::from("dist/daemon.js"),
     ];
 
@@ -291,10 +304,23 @@ pub fn ensure_daemon(
         daemon_paths.insert(1, home_path.join("daemon.js"));
     }
 
+    // Canonicalize paths to resolve any ".." components
     let daemon_path = daemon_paths
         .iter()
+        .map(|p| p.canonicalize().unwrap_or_else(|_| p.clone()))
         .find(|p| p.exists())
         .ok_or("Daemon not found. Set AGENT_BROWSER_HOME environment variable or run from project directory.")?;
+
+    // Strip UNC prefix again for the resolved daemon path
+    #[cfg(windows)]
+    let daemon_path = {
+        let s = daemon_path.to_string_lossy();
+        if let Some(stripped) = s.strip_prefix(r"\\?\") {
+            PathBuf::from(stripped)
+        } else {
+            daemon_path
+        }
+    };
 
     // Spawn daemon as a fully detached background process
     #[cfg(unix)]
@@ -437,11 +463,14 @@ pub fn ensure_daemon(
             cmd.env("AGENT_BROWSER_IOS_DEVICE", d);
         }
 
-        // CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS
+        // CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW
+        // Note: DETACHED_PROCESS (0x08) breaks node.exe on Windows because it
+        // removes the console entirely and node fails during initialization.
+        // CREATE_NO_WINDOW (0x08000000) keeps the console handle but hides the window.
         const CREATE_NEW_PROCESS_GROUP: u32 = 0x00000200;
-        const DETACHED_PROCESS: u32 = 0x00000008;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
 
-        cmd.creation_flags(CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS)
+        cmd.creation_flags(CREATE_NEW_PROCESS_GROUP | CREATE_NO_WINDOW)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
@@ -458,10 +487,20 @@ pub fn ensure_daemon(
         thread::sleep(Duration::from_millis(100));
     }
 
-    Err(format!(
-        "Daemon failed to start (socket: {})",
-        get_socket_dir().join(format!("{}.sock", session)).display()
-    ))
+    #[cfg(unix)]
+    {
+        Err(format!(
+            "Daemon failed to start (socket: {})",
+            get_socket_dir().join(format!("{}.sock", session)).display()
+        ))
+    }
+    #[cfg(windows)]
+    {
+        Err(format!(
+            "Daemon failed to start (tcp: 127.0.0.1:{})",
+            get_port_for_session(session)
+        ))
+    }
 }
 
 fn connect(session: &str) -> Result<Connection, String> {
